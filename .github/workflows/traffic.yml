@@ -3,7 +3,7 @@ name: Track GitHub Traffic
 
 on:
   schedule:
-    - cron: "35 10 * * *"
+    - cron: "37 10 * * *"
   workflow_dispatch:
 
 jobs:
