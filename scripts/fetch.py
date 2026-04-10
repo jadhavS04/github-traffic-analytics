@@ -3,19 +3,30 @@ import os, requests, json, datetime
 # Create main data folder if not exists
 os.makedirs("data", exist_ok=True)
 
-TOKEN = os.environ["TOKEN"]
-HEADERS = {"Authorization": f"Bearer {TOKEN}"}
+TOKEN = os.environ.get("TOKEN")
+if not TOKEN:
+    raise SystemExit("Environment variable TOKEN is required for GitHub API authentication.")
+
+HEADERS = {"Authorization": f"Bearer {TOKEN}", "Accept": "application/vnd.github+json"}
 USERNAME = "jadhavS04"   # <-- replace with your GitHub username
+
 
 def fetch(endpoint, repo):
     url = f"https://api.github.com/repos/{USERNAME}/{repo}/{endpoint}"
     r = requests.get(url, headers=HEADERS)
+    if not r.ok:
+        raise SystemExit(f"Failed to fetch {endpoint} for {repo}: {r.status_code} {r.text}")
     return r.json()
 
-repos = requests.get(
-    f"https://api.github.com/users/{USERNAME}/repos",
-    headers=HEADERS
-).json()
+
+def fetch_repos():
+    url = f"https://api.github.com/users/{USERNAME}/repos"
+    r = requests.get(url, headers=HEADERS)
+    if not r.ok:
+        raise SystemExit(f"Failed to fetch repo list for {USERNAME}: {r.status_code} {r.text}")
+    return r.json()
+
+repos = fetch_repos()
 
 today = datetime.date.today().isoformat()
 
