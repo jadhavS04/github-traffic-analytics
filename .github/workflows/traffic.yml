@@ -26,7 +26,7 @@ jobs:
 
     - name: Run fetch script
       env:
-        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TOKEN: ${{ secrets.GH_PAT }}
       run: python scripts/fetch.py
 
     - name: Commit changes

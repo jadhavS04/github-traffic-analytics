@@ -20,11 +20,12 @@ def fetch(endpoint, repo):
 
 
 def fetch_repos():
-    url = f"https://api.github.com/users/{USERNAME}/repos"
+    url = f"https://api.github.com/users/{USERNAME}/repos?per_page=100"
     r = requests.get(url, headers=HEADERS)
     if not r.ok:
         raise SystemExit(f"Failed to fetch repo list for {USERNAME}: {r.status_code} {r.text}")
-    return r.json()
+    # Exclude forks — traffic API only works on repos you own
+    return [repo for repo in r.json() if not repo["fork"]]
 
 repos = fetch_repos()
 
