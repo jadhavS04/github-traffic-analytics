@@ -1,1 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GitHub traffic analytics</title>
+<style>
+:root{--bg:#f5f6f3;--panel:#fff;--ink:#17201b;--mute:#667269;--line:#dde3dc;--a:#1d7a58;--b:#c4772a;--c:#3a6ca6;--d:#8a58ae;--up:#1d7a58;--dn:#b3402f;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1411;--panel:#161d19;--ink:#e5ebe7;--mute:#8b988f;--line:#27312b;--a:#4cc59a;--b:#e3a05a;--c:#6fa3dc;--d:#b890dc;--up:#4cc59a;--dn:#ee8272}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+h1{font-size:26px;margin:0;letter-spacing:-.01em}
+h2{font-size:15px;margin:0 0 10px}
+.mut{color:var(--mute);font-size:13px}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+.seg{display:flex}.seg button{border-radius:0;margin-left:-1px}.seg button:first-child{border-radius:6px 0 0 6px;margin:0}.seg button:last-child{border-radius:0 6px 6px 0}
+.seg button.on{background:var(--a);border-color:var(--a);color:#fff}
+:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.kpis{display:flex;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:12px}
+.kpi{flex:1 1 150px;padding:14px 16px;border-left:1px solid var(--line)}.kpi:first-child{border-left:0}
+.kpi b{display:block;font-size:26px;line-height:1.2;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.wide{grid-column:1/-1}
+.cv{position:relative;height:240px}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+th{font-weight:600;color:var(--mute);cursor:pointer;user-select:none;white-space:nowrap}
+.tw{overflow-x:auto}
+#heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,12px);grid-auto-columns:12px;gap:3px;overflow-x:auto;padding-bottom:4px}
+#heat i{background:color-mix(in srgb,var(--a) var(--p,0%),var(--line));border-radius:2px}
+ul{margin:0;padding-left:18px}li{margin:4px 0}
+.empty{color:var(--mute);padding:8px 0}
+footer{margin-top:20px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.kpi{flex-basis:45%}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div><h1>GitHub traffic analytics</h1><div class="mut" id="sub"></div></div>
+  <div class="ctl">
+    <select id="repo" aria-label="Repository"></select>
+    <div class="seg" id="rng" role="group" aria-label="Date range"></div>
+    <label class="mut"><input type="checkbox" id="ma" checked> 7-day average</label>
+    <button id="csv">Download CSV</button>
+  </div>
+</header>
+<div id="msg"></div>
+<section class="kpis" id="kpis"></section>
+<section class="grid">
+  <div class="p wide"><h2>Views and unique visitors</h2><div class="cv"><canvas id="c_views"></canvas></div></div>
+  <div class="p wide"><h2>Clones and unique cloners</h2><div class="cv"><canvas id="c_clones"></canvas></div></div>
+  <div class="p"><h2>Stars and forks (cumulative)</h2><div class="cv"><canvas id="c_stars"></canvas></div></div>
+  <div class="p"><h2>Average views by weekday</h2><div class="cv"><canvas id="c_wd"></canvas></div></div>
+  <div class="p wide"><h2>Daily views, last 26 weeks</h2><div id="heat"></div></div>
+  <div class="p wide"><h2>What stands out</h2><ul id="ins"></ul></div>
+  <div class="p wide"><h2>Repositories <span class="mut">(click a column to sort, a row to filter)</span></h2><div class="tw"><table id="t_repos"></table></div></div>
+  <div class="p"><h2>Top referrers <span class="mut" id="refdate"></span></h2><div class="tw"><table id="t_ref"></table></div></div>
+  <div class="p"><h2>Referrer trend <span class="mut">(rolling 14-day count per snapshot)</span></h2><div class="cv"><canvas id="c_ref"></canvas></div></div>
+  <div class="p wide"><h2>Popular pages <span class="mut" id="pathdate"></span></h2><div class="tw"><table id="t_paths"></table></div></div>
+  <div class="p"><h2>Commits per day</h2><div class="cv"><canvas id="c_commits"></canvas></div></div>
+  <div class="p"><h2>Languages</h2><div class="cv"><canvas id="c_lang"></canvas></div></div>
+  <div class="p wide"><h2>Release downloads</h2><div class="tw"><table id="t_rel"></table></div></div>
+</section>
+<footer class="mut">
+  GitHub keeps only 14 days of views and clones; this page shows what was saved each day since tracking began.
+  Unique counts are summed per day, so one person on two days counts twice. Referrers and pages are GitHub's top 10 over a rolling 14 days.
+</footer>
+</main>
+<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D=window.TRAFFIC||{tables:{}},$=s=>document.querySelector(s);
+const tb=n=>{const t=D.tables[n]||{cols:[],rows:[]};return t.rows.map(r=>{const o={};t.cols.forEach((c,i)=>o[c]=r[i]);return o})};
+const V=tb('views'),C=tb('clones'),RS=tb('repo_stats'),SG=tb('stargazers'),FK=tb('forks'),RF=tb('referrers'),PA=tb('paths'),RL=tb('releases'),LG=tb('languages'),CM=tb('commits');
+const repos=[...new Set(RS.concat(V).map(r=>r.repo))].sort();
+const S={repo:'all',days:30,ma:true,sort:'views',dir:-1};
+const dstr=d=>d.toISOString().slice(0,10),U=s=>new Date(s+'T00:00:00Z');
+const addDays=(s,n)=>{const d=U(s);d.setUTCDate(d.getUTCDate()+n);return dstr(d)};
+const dd=(a,b)=>Math.round((U(b)-U(a))/864e5);
+const inR=r=>S.repo==='all'||r.repo===S.repo;
+const dates=V.concat(C).map(r=>r.date).sort();
+const first=dates[0]||dstr(new Date()),last=dates[dates.length-1]||first;
+const fmt=n=>Math.round(n).toLocaleString();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const col=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
+const sum=a=>a.reduce((x,y)=>x+y[1],0);
+const ma=(a,n=7)=>a.map((_,i)=>{const s=a.slice(Math.max(0,i-n+1),i+1);return s.reduce((x,y)=>x+y,0)/s.length});
 
+function win(o){const n=S.days||dd(first,last)+1;if(!S.days&&o)return null;const end=addDays(last,-o*n);let start=addDays(end,-(n-1));if(o&&start<first)return null;if(!o&&start<first)start=first;return[start,end]}
+function daily(rows,f,[s,e]){const m={};rows.filter(inR).forEach(r=>{if(r.date>=s&&r.date<=e)m[r.date]=(m[r.date]||0)+r[f]});const o=[];for(let d=s;d<=e;d=addDays(d,1))o.push([d,m[d]||0]);return o}
+function latest(rows){const m={};rows.filter(inR).forEach(r=>{if(!m[r.repo]||r.date>m[r.repo])m[r.repo]=r.date});return rows.filter(r=>inR(r)&&r.date===m[r.repo])}
+const inW=(d,w)=>w&&d>=w[0]&&d<=w[1];
+
+const charts={};
+Chart.defaults.font.family='ui-sans-serif,system-ui,sans-serif';
+function chart(id,cfg){if(charts[id])charts[id].destroy();Chart.defaults.color=col('mute');Chart.defaults.borderColor=col('line');
+  cfg.options=Object.assign({maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10}}},scales:{x:{ticks:{maxTicksLimit:8},grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}}},cfg.options||{});
+  charts[id]=new Chart($('#'+id),cfg)}
+const ds=(label,data,c,o={})=>Object.assign({label,data,borderColor:col(c),backgroundColor:col(c),pointRadius:0,borderWidth:2,tension:.25},o);
+
+function delta(v,p){if(p==null)return'';if(p===0)return v>0?'<span class="up">new</span>':'';const x=(v-p)/p*100;return`<span class="${x>=0?'up':'dn'}">${x>=0?'▲':'▼'} ${Math.abs(x).toFixed(0)}%</span> <span class="mut">vs previous</span>`}
+
+function render(){
+  const w=win(0),pw=win(1);
+  if(!dates.length){$('#msg').innerHTML='<div class="p empty">No traffic saved yet. Run the “Collect GitHub traffic” workflow from the Actions tab, then reload.</div>';$('#sub').textContent='';return}
+  const v=daily(V,'views',w),u=daily(V,'uniques',w),c=daily(C,'clones',w),cu=daily(C,'uniques',w);
+  const pv=pw&&sum(daily(V,'views',pw)),pu=pw&&sum(daily(V,'uniques',pw)),pc=pw&&sum(daily(C,'clones',pw)),pcu=pw&&sum(daily(C,'uniques',pw));
+  const stars=SG.filter(r=>inR(r)&&inW(r.starred_at.slice(0,10),w)).length,pst=pw&&SG.filter(r=>inR(r)&&inW(r.starred_at.slice(0,10),pw)).length;
+  const frk=FK.filter(r=>inR(r)&&inW(r.created_at.slice(0,10),w)).length,pfk=pw&&FK.filter(r=>inR(r)&&inW(r.created_at.slice(0,10),pw)).length;
+  const L=latest(RS),tot=k=>L.reduce((x,r)=>x+r[k],0);
+  $('#sub').textContent=`${S.repo==='all'?repos.length+' repositories':S.repo} · tracking since ${first} · ${dd(first,last)+1} days stored · updated ${D.generated||'?'} · ${fmt(tot('stars'))} stars, ${fmt(tot('forks'))} forks, ${fmt(tot('watchers'))} watchers, ${fmt(tot('open_issues'))} open issues, ${fmt(tot('open_prs'))} open PRs`;
+  const k=(l,x,p)=>`<div class="kpi"><span class="mut">${l}</span><b>${fmt(x)}</b>${delta(x,p)}</div>`;
+  $('#kpis').innerHTML=k('Views',sum(v),pv)+k('Unique visitors',sum(u),pu)+k('Clones',sum(c),pc)+k('Unique cloners',sum(cu),pcu)+k('New stars',stars,pst)+k('New forks',frk,pfk);
+
+  const lab=v.map(x=>x[0]),vv=v.map(x=>x[1]);
+  const lines=[ds('Views',vv,'a'),ds('Unique visitors',u.map(x=>x[1]),'c')];
+  if(S.ma)lines.push(ds('Views, 7-day avg',ma(vv),'b',{borderDash:[5,4],borderWidth:2}));
+  chart('c_views',{type:'line',data:{labels:lab,datasets:lines}});
+  const cl=c.map(x=>x[1]),cls=[ds('Clones',cl,'d'),ds('Unique cloners',cu.map(x=>x[1]),'c')];
+  if(S.ma)cls.push(ds('Clones, 7-day avg',ma(cl),'b',{borderDash:[5,4]}));
+  chart('c_clones',{type:'line',data:{labels:c.map(x=>x[0]),datasets:cls}});
+
+  const sd=SG.filter(inR).map(r=>r.starred_at.slice(0,10)),fd=FK.filter(inR).map(r=>r.created_at.slice(0,10));
+  const cum=(arr)=>{let n=arr.filter(d=>d<w[0]).length;return lab.map(d=>(n+=arr.filter(x=>x===d).length))};
+  chart('c_stars',{type:'line',data:{labels:lab,datasets:[ds('Stars',cum(sd),'b'),ds('Forks',cum(fd),'d')]}});
+
+  const wd=Array(7).fill(0),wc=Array(7).fill(0);v.forEach(([d,x])=>{const i=U(d).getUTCDay();wd[i]+=x;wc[i]++});
+  const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],avg=wd.map((x,i)=>wc[i]?x/wc[i]:0);
+  chart('c_wd',{type:'bar',data:{labels:names,datasets:[{label:'Avg views',data:avg,backgroundColor:col('a')}]},options:{plugins:{legend:{display:false}}}});
+
+  const hs=addDays(last,-181),h=daily(V,'views',[hs,last]),mx=Math.max(1,...h.map(x=>x[1]));
+  $('#heat').innerHTML='<i style="visibility:hidden"></i>'.repeat(U(hs).getUTCDay())+h.map(([d,x])=>`<i title="${d}: ${x} views" style="--p:${Math.round(x/mx*100)}%"></i>`).join('');
+
+  insights(v,pv,sum(v),stars,avg,names,c);
+  repoTable(w);refTables();
+  const cm=daily(CM,'commits',w);
+  chart('c_commits',{type:'bar',data:{labels:cm.map(x=>x[0]),datasets:[{label:'Commits',data:cm.map(x=>x[1]),backgroundColor:col('c')}]},options:{plugins:{legend:{display:false}}}});
+  const lg={};latest(LG).forEach(r=>lg[r.language]=(lg[r.language]||0)+r.bytes);
+  const top=Object.entries(lg).sort((a,b)=>b[1]-a[1]).slice(0,8),pal=['a','b','c','d'].map(col);
+  chart('c_lang',{type:'doughnut',data:{labels:top.map(x=>x[0]),datasets:[{data:top.map(x=>x[1]),backgroundColor:top.map((_,i)=>pal[i%4]+(i<4?'':'99')),borderWidth:0}]},options:{interaction:{mode:'nearest'},scales:{},plugins:{legend:{position:'right',labels:{boxWidth:10}}}}});
+  releases(w);
+}
+
+function insights(v,pv,tv,stars,avg,names,c){
+  const o=[],vals=v.map(x=>x[1]),n=vals.length||1,m=tv/n,sd=Math.sqrt(vals.reduce((x,y)=>x+(y-m)**2,0)/n);
+  const pk=v.reduce((a,b)=>b[1]>a[1]?b:a,['',-1]);
+  if(pk[1]>0)o.push(`Busiest day was <b>${pk[0]}</b> with <b>${fmt(pk[1])}</b> views; the average is ${m.toFixed(1)} a day.`);
+  const bw=avg.indexOf(Math.max(...avg));if(Math.max(...avg)>0)o.push(`<b>${names[bw]}</b> is your strongest weekday (${avg[bw].toFixed(1)} views on average).`);
+  const sp=v.filter(x=>x[1]>m+2*sd&&x[1]>=5).map(x=>`${x[0]} (${x[1]})`).slice(-3);
+  if(sp.length)o.push(`Unusual spikes: ${sp.join(', ')}. Check the referrers table for what sent them.`);
+  const l14=vals.slice(-14),proj=l14.reduce((a,b)=>a+b,0)/(l14.length||1)*30;
+  o.push(`At the last-14-day pace you would get about <b>${fmt(proj)}</b> views over the next 30 days.`);
+  if(tv>0)o.push(`<b>${(stars/tv*1000).toFixed(1)}</b> new stars per 1,000 views, and <b>${(sum(c)/tv).toFixed(2)}</b> clones per view (a high ratio usually means bots, CI or mirrors).`);
+  const z=vals.filter(x=>!x).length;o.push(`${Math.round(z/n*100)}% of days in this range had no views.`);
+  $('#ins').innerHTML=o.map(x=>`<li>${x}</li>`).join('')}
+
+function repoTable(w){
+  const rows=repos.map(r=>{const f=x=>x.filter(y=>y.repo===r);const vs=f(V).filter(y=>inW(y.date,w)),cs=f(C).filter(y=>inW(y.date,w));
+    const rs=f(RS).sort((a,b)=>a.date<b.date?1:-1)[0]||{};const vw=vs.reduce((a,b)=>a+b.views,0);
+    const ns=SG.filter(y=>y.repo===r&&inW(y.starred_at.slice(0,10),w)).length;
+    return{repo:r,views:vw,uniques:vs.reduce((a,b)=>a+b.uniques,0),clones:cs.reduce((a,b)=>a+b.clones,0),stars:rs.stars||0,new_stars:ns,forks:rs.forks||0,issues:rs.open_issues||0,conv:vw?ns/vw*1000:0}});
+  rows.sort((a,b)=>(a[S.sort]>b[S.sort]?1:-1)*S.dir);
+  const H=[['repo','Repository'],['views','Views'],['uniques','Visitors'],['clones','Clones'],['stars','Stars'],['new_stars','New stars'],['forks','Forks'],['issues','Issues'],['conv','Stars/1k views']];
+  $('#t_repos').innerHTML='<tr>'+H.map(h=>`<th data-k="${h[0]}">${h[1]}${S.sort===h[0]?(S.dir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr>'+rows.map(r=>`<tr data-r="${esc(r.repo)}" style="cursor:pointer"><td title="${esc(r.repo)}">${esc(r.repo)}</td>`+H.slice(1).map(h=>`<td>${h[0]==='conv'?r.conv.toFixed(1):fmt(r[h[0]])}</td>`).join('')+'</tr>').join('')}
+
+function agg(rows,key,extra){const m={};rows.forEach(r=>{const k=r[key];m[k]=m[k]||{k,count:0,uniques:0,t:r.title};m[k].count+=r.count;m[k].uniques+=r.uniques});return Object.values(m).sort((a,b)=>b.count-a.count)}
+function refTables(){
+  const R=latest(RF),P=latest(PA),mx=x=>x.map(r=>r.date).sort().pop()||'';
+  $('#refdate').textContent=R.length?`as of ${mx(R)}`:'';$('#pathdate').textContent=P.length?`as of ${mx(P)}`:'';
+  const tab=(rows,h)=>rows.length?`<tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>`+rows.slice(0,10).map(r=>`<tr><td title="${esc(r.k)}">${esc(r.k)}</td><td>${fmt(r.count)}</td><td>${fmt(r.uniques)}</td></tr>`).join(''):'<tr><td class="empty">No data yet</td></tr>';
+  const ar=agg(R,'referrer');$('#t_ref').innerHTML=tab(ar,['Source','Views','Visitors']);
+  $('#t_paths').innerHTML=tab(agg(P,'path'),['Page','Views','Visitors']);
+  const top=ar.slice(0,5).map(x=>x.k),days=[...new Set(RF.filter(inR).map(r=>r.date))].sort(),cl=['a','b','c','d','up'].map(col);
+  chart('c_ref',{type:'line',data:{labels:days,datasets:top.map((t,i)=>ds(t,days.map(d=>RF.filter(r=>inR(r)&&r.date===d&&r.referrer===t).reduce((a,b)=>a+b.count,0)),'a',{borderColor:cl[i],backgroundColor:cl[i]}))}})}
+
+function releases(w){
+  const rows=RL.filter(inR),k=r=>r.repo+'|'+r.tag+'|'+r.asset,m={};
+  rows.forEach(r=>{(m[k(r)]=m[k(r)]||[]).push(r)});
+  const out=Object.values(m).map(a=>{a.sort((x,y)=>x.date<y.date?-1:1);const l=a[a.length-1],f=a.find(x=>x.date>=w[0])||a[0];return{...l,gain:l.downloads-f.downloads}}).sort((a,b)=>b.downloads-a.downloads).slice(0,15);
+  $('#t_rel').innerHTML=out.length?'<tr><th>Asset</th><th>Release</th><th>Downloads</th><th>Gained in range</th></tr>'+out.map(r=>`<tr><td title="${esc(r.repo)}">${esc(r.asset)}</td><td>${esc(r.tag)}</td><td>${fmt(r.downloads)}</td><td>+${fmt(r.gain)}</td></tr>`).join(''):'<tr><td class="empty">No release files published yet</td></tr>'}
+
+function csvOut(){const w=win(0),f=[['views',V,'views'],['unique_visitors',V,'uniques'],['clones',C,'clones'],['unique_cloners',C,'uniques']].map(x=>daily(x[1],x[2],w));
+  const t='date,views,unique_visitors,clones,unique_cloners\n'+f[0].map((r,i)=>[r[0],...f.map(a=>a[i][1])].join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download=`traffic-${S.repo==='all'?'all':S.repo.replace('/','-')}.csv`;a.click()}
+
+$('#repo').innerHTML='<option value="all">All repositories</option>'+repos.map(r=>`<option>${esc(r)}</option>`).join('');
+$('#repo').onchange=e=>{S.repo=e.target.value;render()};
+$('#ma').onchange=e=>{S.ma=e.target.checked;render()};
+$('#csv').onclick=csvOut;
+const R=[[7,'7d'],[30,'30d'],[90,'90d'],[365,'1y'],[0,'All']];
+$('#rng').innerHTML=R.map(r=>`<button data-d="${r[0]}" class="${r[0]===S.days?'on':''}">${r[1]}</button>`).join('');
+$('#rng').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.days=+b.dataset.d;[...$('#rng').children].forEach(x=>x.classList.toggle('on',x===b));render()};
+$('#t_repos').onclick=e=>{const th=e.target.closest('th'),tr=e.target.closest('tr[data-r]');
+  if(th){const k=th.dataset.k;S.dir=S.sort===k?-S.dir:(k==='repo'?1:-1);S.sort=k;render()}
+  else if(tr){S.repo=tr.dataset.r;$('#repo').value=S.repo;render();scrollTo({top:0,behavior:'smooth'})}};
+render();
+</script>
+</body>
+</html>
