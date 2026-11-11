@@ -40,6 +40,7 @@ jadhavS04/Python-For-Data-Science,2026-11-08,/jadhavS04/Python-For-Data-Science/
 jadhavS04/Python-For-Data-Science,2026-11-08,/jadhavS04/Python-For-Data-Science/blob/main/titanic.csv,/blob/main/titanic.csv,1,1
 jadhavS04/Python-For-Data-Science,2026-11-09,/jadhavS04/Python-For-Data-Science/blob/main/titanic.csv,/blob/main/titanic.csv,1,1
 jadhavS04/Python-For-Data-Science,2026-11-10,/jadhavS04/Python-For-Data-Science/blob/main/titanic.csv,/blob/main/titanic.csv,1,1
+jadhavS04/Python-For-Data-Science,2026-11-11,/jadhavS04/Python-For-Data-Science/blob/main/README.md,/blob/main/README.md,1,1
 jadhavS04/Python-For-Data-Science,2026-11-11,/jadhavS04/Python-For-Data-Science/blob/main/titanic.csv,/blob/main/titanic.csv,1,1
 jadhavS04/agentic-ai,2026-10-25,/jadhavS04/agentic-ai,Overview,2,1
 jadhavS04/agentic-ai,2026-10-25,/jadhavS04/agentic-ai/blob/main/python/decorators.ipynb,/blob/main/python/decorators.ipynb,1,1
@@ -443,16 +444,12 @@ jadhavS04/github-traffic-analytics,2026-11-10,/jadhavS04/github-traffic-analytic
 jadhavS04/github-traffic-analytics,2026-11-10,/jadhavS04/github-traffic-analytics/agents,/agents,1,1
 jadhavS04/github-traffic-analytics,2026-11-10,/jadhavS04/github-traffic-analytics/graphs/traffic,/graphs/traffic,1,1
 jadhavS04/github-traffic-analytics,2026-11-10,/jadhavS04/github-traffic-analytics/pulse,/pulse,2,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics,Overview,8,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions,/actions,4,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions/runs/40495738242,/actions/runs/40495738242,1,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions/runs/40495738242/job/122160597907,/actions/runs/40495738242/job/122160597907,1,1
+jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics,Overview,6,1
+jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions,/actions,3,1
 jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions/runs/40923053647,/actions/runs/40923053647,1,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions/workflows/collect.yml,/actions/workflows/collect.yml,2,1
+jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions/workflows/collect.yml,/actions/workflows/collect.yml,1,1
 jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/actions/workflows/pages/pages-build-deployment,/actions/workflows/pages/pages-build-deployment,1,1
 jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/agents,/agents,1,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/graphs/traffic,/graphs/traffic,1,1
-jadhavS04/github-traffic-analytics,2026-11-11,/jadhavS04/github-traffic-analytics/pulse,/pulse,2,1
 jadhavS04/ipl_analytics,2026-10-25,/jadhavS04/ipl_analytics,Overview,1,1
 jadhavS04/ipl_analytics,2026-10-26,/jadhavS04/ipl_analytics,Overview,1,1
 jadhavS04/ipl_analytics,2026-10-27,/jadhavS04/ipl_analytics,Overview,1,1
@@ -828,7 +825,7 @@ jadhavS04/split-spend-app,2026-11-10,/jadhavS04/split-spend-app/actions/runs/410
 jadhavS04/split-spend-app,2026-11-10,/jadhavS04/split-spend-app/actions/workflows/build-apk.yml,/actions/workflows/build-apk.yml,1,1
 jadhavS04/split-spend-app,2026-11-10,/jadhavS04/split-spend-app/blob/main/.github/workflows/build-apk.yml,/blob/main/.github/workflows/build-apk.yml,1,1
 jadhavS04/split-spend-app,2026-11-10,/jadhavS04/split-spend-app/tree/main/.github/workflows,/tree/main/.github/workflows,1,1
-jadhavS04/split-spend-app,2026-11-11,/jadhavS04/split-spend-app,Overview,3,2
+jadhavS04/split-spend-app,2026-11-11,/jadhavS04/split-spend-app,Overview,2,1
 jadhavS04/split-spend-app,2026-11-11,/jadhavS04/split-spend-app/actions,/actions,1,1
 jadhavS04/split-spend-app,2026-11-11,/jadhavS04/split-spend-app/actions/runs/41031254234,/actions/runs/41031254234,1,1
 jadhavS04/split-spend-app,2026-11-11,/jadhavS04/split-spend-app/actions/runs/41031254234/job/123981272141,/actions/runs/41031254234/job/123981272141,1,1
