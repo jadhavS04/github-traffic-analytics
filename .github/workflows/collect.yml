@@ -33,7 +33,7 @@ jobs:
         run: python scripts/collect.py
 
       - name: Build dashboard data
-        if: always()
+        if: success()
         run: python scripts/build_dashboard.py
 
       - name: Commit results
