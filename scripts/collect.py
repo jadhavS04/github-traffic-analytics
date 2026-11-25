@@ -147,6 +147,21 @@ class Store:
     def count(self, name, repo):
         return sum(1 for v in self.table(name).values() if v["repo"] == repo)
 
+    def prune_repos(self, allowed_repos):
+        """Remove stored rows for repositories outside the current tracking set."""
+        allowed = {name.lower() for name in allowed_repos}
+        removed = 0
+        for name, spec in TABLES.items():
+            if "repo" not in spec["cols"]:
+                continue
+            table = self.table(name)
+            stale = [key for key, row in table.items() if row["repo"].lower() not in allowed]
+            for key in stale:
+                del table[key]
+                removed += 1
+        if removed:
+            print(f"Pruned {removed} stale rows from deleted, private, or untracked repositories")
+
     def save(self):
         DATA.mkdir(parents=True, exist_ok=True)
         for name, spec in TABLES.items():
@@ -271,7 +286,25 @@ def discover(cfg, login):
     owner = cfg.get("owner") or login
     explicit = cfg.get("repos") or []
     if explicit:
-        return [n if "/" in n else f"{owner}/{n}" for n in explicit]
+        candidates = [n if "/" in n else f"{owner}/{n}" for n in explicit]
+        out = []
+        for full in candidates:
+            try:
+                meta = request(f"/repos/{full}").json()
+            except ApiError as e:
+                if e.status == 404:
+                    print(f"  skipping unavailable repository: {full}")
+                    continue
+                raise
+            if meta.get("private") and not cfg.get("include_private", False):
+                print(f"  skipping private repository: {meta['full_name']}")
+                continue
+            if meta.get("fork") and not cfg.get("include_forks", False):
+                continue
+            if meta.get("archived") and not cfg.get("include_archived", False):
+                continue
+            out.append(meta["full_name"])
+        return out
     if owner.lower() == login.lower():
         repos = paginate("/user/repos", {"affiliation": "owner", "sort": "full_name"})
     else:
@@ -330,6 +363,9 @@ def main():
         sys.exit(check(repos, login, me.headers.get("X-OAuth-Scopes")))
 
     store, d = Store(), today()
+    # The discovered list is authoritative. Remove data for deleted, private,
+    # or otherwise untracked repositories before collecting the current set.
+    store.prune_repos(repos)
     traffic_ok, errors = 0, 0
     print(f"{d} UTC - collecting {len(repos)} repositories for {login}")
     for full in repos:
