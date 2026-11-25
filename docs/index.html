@@ -73,7 +73,7 @@ footer{margin-top:20px}
   Unique counts are summed per day, so one person on two days counts twice. Referrers and pages are GitHub's top 10 over a rolling 14 days.
 </footer>
 </main>
-<script src="data.js"></script>
+<script>document.write('<script src="data.js?v='+Date.now()+'"><\/script>');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const D=window.TRAFFIC||{tables:{}},$=s=>document.querySelector(s);
